@@ -20,7 +20,7 @@ function getBotReply(message) {
 
   // About bot
   if (msg.includes("your name")) return "I’m your personal chatbot 🤖";
-  if (msg.includes("who made you") || msg.include ("owner")) return "I was created by Saurabh Kumar 🧑‍💻";
+  if (msg.includes("who made you") || msg.includes ("owner")) return "I was created by Saurabh Kumar 🧑‍💻";
   if (msg.includes("how old are you")) return "I was born in 2025, so I’m pretty new!";
   if (msg.includes("purpose") || msg.includes("what can you do")) return "I can chat with you and answer basic questions.";
 
