@@ -8,89 +8,165 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- Patna Women's College Info ---
-const patnaWomensCollege = {
-    name: "Patna Women's College",
-    location: "Patna, Bihar, India",
-    established: "1940",
-    affiliation: "Patna University",
-    courses: {
-        undergraduate: ["BA", "BSc", "BCom"],
-        postgraduate: ["MA", "MSc", "MCom"]
+// --- Patna Women's College FAQ with fuzzy matching ---
+const patnaWomensCollegeFAQ = [
+    {
+        question: "What is Patna Women's College?",
+        answer: "Patna Women’s College, established in 1940, is the first women’s college in Bihar. It is an autonomous institution affiliated with Patna University and accredited with ‘A’ Grade by NAAC.",
+        keywords: ["about", "college", "what is", "patna women's college"]
     },
-    admission: {
-        criteria: "Based on merit in qualifying exam",
-        process: "Online/offline application through college website"
+    {
+        question: "Where is the college located?",
+        answer: "Bailey Road, Patna, Bihar – 800001.",
+        keywords: ["location", "address", "where"]
     },
-    fees: {
-        undergraduate: "Varies by course, approx ₹20,000–₹50,000/year",
-        postgraduate: "Varies, approx ₹25,000–₹60,000/year"
+    {
+        question: "Who is the Principal of Patna Women’s College?",
+        answer: "The current Principal is Dr. Sister M. Rashmi A.C.",
+        keywords: ["principal", "head", "who"]
     },
-    facilities: ["Library", "Hostel", "Sports", "Laboratories", "Canteen"],
-    hostel: {
-        availability: true,
-        separate_blocks: "Yes, for girls"
+    {
+        question: "What is the NAAC grade of the college?",
+        answer: "The college is accredited with NAAC ‘A’ Grade (3.58/4 CGPA in Cycle IV).",
+        keywords: ["naac", "grade", "accreditation"]
     },
-    faculty: "Qualified and experienced in respective subjects",
-    website: "https://www.patnawomenscollege.in"
-};
+    {
+        question: "What UG courses are available?",
+        answer: "B.A., B.Sc., B.Com, BBA, BCA, Bachelor of Mass Communication, Bachelor of Advertising & Marketing Management, etc.",
+        keywords: ["ug", "undergraduate", "courses", "program"]
+    },
+    {
+        question: "What PG courses are available?",
+        answer: "M.A., M.Sc., M.Com, MCA, MBA, etc.",
+        keywords: ["pg", "postgraduate", "courses", "program"]
+    },
+    {
+        question: "Are vocational/professional courses available?",
+        answer: "Yes, professional courses like BMC, BCA, BBA, B.Voc, etc. are offered.",
+        keywords: ["vocational", "professional", "courses", "bmc", "bba", "bca"]
+    },
+    {
+        question: "How can I apply for admission?",
+        answer: "Admissions are through an Entrance Test (PUCET) conducted by the college. Forms are available online on the official website.",
+        keywords: ["admission", "apply", "entrance", "eligibility"]
+    },
+    {
+        question: "What is the eligibility for UG courses?",
+        answer: "Minimum 45%–50% in Class 12 (varies by course).",
+        keywords: ["eligibility", "criteria", "requirements", "ug"]
+    },
+    {
+        question: "What documents are required?",
+        answer: "Marksheet, Transfer Certificate, Migration Certificate (if needed), Caste/Reservation Certificate (if applicable), Passport-size photos.",
+        keywords: ["documents", "required", "papers", "certificate"]
+    },
+    {
+        question: "What is the fee for B.Sc. (Hons.)?",
+        answer: "Approx ₹20,000–₹30,000 per year (varies by subject).",
+        keywords: ["fees", "cost", "bsc", "bachelor"]
+    },
+    {
+        question: "What is the fee for Professional Courses (like BBA, BCA, BMC)?",
+        answer: "Approx ₹40,000–₹60,000 per year.",
+        keywords: ["fees", "professional", "bba", "bca", "bmc"]
+    },
+    {
+        question: "How do I pay my college fees?",
+        answer: "Fees can be paid through the college online portal (LMS/ERP) using Debit Card, Credit Card, Net Banking, or UPI. Receipts are generated online.",
+        keywords: ["pay", "fees", "payment"]
+    },
+    {
+        question: "Is offline fee payment available?",
+        answer: "Yes, in some cases fees can be paid via Bank Challan at the designated bank.",
+        keywords: ["offline", "fees", "payment"]
+    },
+    {
+        question: "Does the college provide hostel facilities?",
+        answer: "Yes, the college has hostels for students with limited seats. Admission is merit-based.",
+        keywords: ["hostel", "accommodation", "stay"]
+    },
+    {
+        question: "How can I apply for hostel accommodation?",
+        answer: "Students need to fill out the hostel form during admission and submit it with required documents.",
+        keywords: ["hostel", "apply", "form"]
+    },
+    {
+        question: "How do I access the LMS (Learning Management System)?",
+        answer: "1. Visit the official website of Patna Women’s College.\n2. Click on the LMS/Student Portal link.\n3. Log in using your Roll Number/Registration ID and password.\n4. Access your courses, study materials, and notices.",
+        keywords: ["lms", "learning management", "system", "portal"]
+    },
+    {
+        question: "How can I check my result?",
+        answer: "1. Visit www.patnawomenscollege.in\n2. Click on Results tab.\n3. Select your course and semester.\n4. Enter your Roll Number/Registration Number.\n5. Download/print your marksheet.",
+        keywords: ["result", "marksheet", "grades"]
+    },
+    {
+        question: "What is PUCET?",
+        answer: "Patna University Common Entrance Test (PUCET) is the entrance exam for admission to UG/PG courses at Patna Women’s College.",
+        keywords: ["pucet", "entrance test", "exam"]
+    },
+    {
+        question: "What facilities are available?",
+        answer: "Library & Reading Hall, Computer Labs, Hostels for students, Sports & Gym facilities, Auditorium & Seminar halls, Canteen, Wi-Fi enabled campus, Digital library resources (e-books, journals, databases).",
+        keywords: ["facilities", "library", "labs", "sports", "canteen", "wifi"]
+    },
+    {
+        question: "What student activities are available?",
+        answer: "Cultural Fest, Sports Day, Tech Fest, NSS/NCC activities, Clubs & Societies (Literary, Cultural, Drama, Science, etc.).",
+        keywords: ["activities", "cultural", "clubs", "fest", "sports"]
+    },
+    {
+        question: "How can I get my Transfer/Migration Certificate?",
+        answer: "Apply through the College Office with an application form and required documents.",
+        keywords: ["transfer", "migration", "certificate", "tc", "mc"]
+    },
+    {
+        question: "Who should I contact for exam-related queries?",
+        answer: "Students should contact the Examination Cell at the college.",
+        keywords: ["exam", "queries", "contact"]
+    },
+    {
+        question: "Is the college only for girls?",
+        answer: "Yes, it is exclusively for women.",
+        keywords: ["girls", "women", "only"]
+    },
+    {
+        question: "Is hostel facility available?",
+        answer: "Yes, limited hostel seats are available based on merit.",
+        keywords: ["hostel", "facility", "available"]
+    },
+    {
+        question: "Is the college government or private?",
+        answer: "It is an autonomous college under Patna University.",
+        keywords: ["government", "private", "type", "autonomous"]
+    },
+    {
+        question: "Approximate fees for various courses?",
+        answer: "UG courses: ₹15,600 – ₹60,000 total or per year depending on course.\nB.A (Hons.): ₹27,000 total.\nB.Sc (Hons.): ₹1,41,000 to ₹2,32,000 total.\nBCA / BBA: Approx ₹2,32,000 – ₹2,69,000 depending on the course.\nPG courses (MA/MSc/MCA etc.): ₹20,800 – ₹65,640 typical.\nPG Diploma/Certificate/Short-Term Courses: ≈ ₹41,000 – ₹48,000 per course.\nHostel Fees: ₹45,600 – ₹54,000 per annum.",
+        keywords: ["fees", "cost", "price", "tuition"]
+    }
+];
 
-// --- Keywords for fuzzy matching ---
-const collegeKeywords = {
-    courses: ["course", "program", "degree", "ug", "undergraduate", "pg", "postgraduate", "msc", "bsc", "ba", "mcom", "bcom", "ma"],
-    admission: ["admission", "apply", "entrance", "eligibility", "criteria", "requirements"],
-    fees: ["fee", "fees", "cost", "tuition", "price"],
-    hostel: ["hostel", "accommodation", "stay", "rooms"],
-    facilities: ["facility", "facilities", "library", "labs", "sports", "canteen"],
-    location: ["location", "where", "address", "city"],
-    established: ["established", "founded", "year", "history", "age"],
-    affiliation: ["affiliation", "university", "college affiliated"],
-    website: ["website", "link", "site"],
-    faculty: ["faculty", "teachers", "staff", "professor", "lecturer"]
-};
-
-// --- Function to handle fuzzy college queries ---
-function getCollegeAnswerFuzzy(query) {
-    const q = query.toLowerCase();
-
-    for (const key in collegeKeywords) {
-        if (collegeKeywords[key].some(word => q.includes(word))) {
-            switch (key) {
-                case "courses":
-                    return `Undergraduate: ${patnaWomensCollege.courses.undergraduate.join(", ")}\nPostgraduate: ${patnaWomensCollege.courses.postgraduate.join(", ")}`;
-                case "admission":
-                    return `Admission Criteria: ${patnaWomensCollege.admission.criteria}\nProcess: ${patnaWomensCollege.admission.process}`;
-                case "fees":
-                    return `Undergraduate: ${patnaWomensCollege.fees.undergraduate}\nPostgraduate: ${patnaWomensCollege.fees.postgraduate}`;
-                case "hostel":
-                    return patnaWomensCollege.hostel.availability 
-                        ? `Hostel is available. Separate blocks: ${patnaWomensCollege.hostel.separate_blocks}` 
-                        : "Hostel is not available.";
-                case "facilities":
-                    return `Facilities: ${patnaWomensCollege.facilities.join(", ")}`;
-                case "location":
-                    return `Location: ${patnaWomensCollege.location}`;
-                case "established":
-                    return `Established in: ${patnaWomensCollege.established}`;
-                case "affiliation":
-                    return `Affiliation: ${patnaWomensCollege.affiliation}`;
-                case "website":
-                    return `Website: ${patnaWomensCollege.website}`;
-                case "faculty":
-                    return `Faculty: ${patnaWomensCollege.faculty}`;
+// --- Fuzzy matching function ---
+function getPwCFAQAnswerFuzzy(message) {
+    const msg = message.toLowerCase();
+    for (let faq of patnaWomensCollegeFAQ) {
+        for (let kw of faq.keywords) {
+            if (msg.includes(kw.toLowerCase())) {
+                return faq.answer;
             }
         }
     }
-    return null; // no match
+    return null;
 }
 
 // --- Simple rule-based chatbot ---
 function getBotReply(message) {
     const msg = message.toLowerCase();
 
-    // Check college info first
-    const collegeAnswer = getCollegeAnswerFuzzy(msg);
-    if (collegeAnswer) return collegeAnswer;
+    // First, check PWC FAQ with fuzzy matching
+    const faqAnswer = getPwCFAQAnswerFuzzy(msg);
+    if (faqAnswer) return faqAnswer;
 
     // Greetings
     if (msg.includes("hello") || msg.includes("hi")) return "Hello! 👋 How can I help you today?";
@@ -100,7 +176,7 @@ function getBotReply(message) {
     
     // About bot
     if (msg.includes("your name")) return "I’m your friendly chatbot 🤖";
-    if (msg.includes("who made you") || msg.includes("owner")) return "I was created by an engineer whose name I can't disclose.🧑‍💻 It's against my training🤔";
+    if (msg.includes("who made you") || msg.includes("owner")) return "I was created by an engineer whose name I can't disclose.🧑‍💻";
     if (msg.includes("how old are you")) return "I was born in 2025, so I’m quite new!";
     if (msg.includes("purpose") || msg.includes("what can you do")) return "I can chat with you, answer general questions, and provide info about Patna Women's College.";
 
